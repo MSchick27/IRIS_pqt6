@@ -75,6 +75,7 @@ class TRIR_widgets_defining():
         instance.TRIRimportbutton = instance.findChild(QtWidgets.QPushButton,'TRIRimport')
         instance.TRIRimportbutton.clicked.connect(lambda:TRIR_widgets_defining.TRIRimportfunc(instance))
         instance.TRIRimportbutton.setShortcut('Ctrl+I')
+        instance.TRIRimportbutton.setToolTip('Shortcut: Ctrl+ I')
 
         instance.TRIRreloadbutton = instance.findChild(QtWidgets.QPushButton,'reloadbutton')
         instance.TRIRreloadbutton.clicked.connect(lambda:TRIR_widgets_defining.import_reloaded(instance))
@@ -91,6 +92,8 @@ class TRIR_widgets_defining():
         instance.TRIRexportdata =instance.findChild(QtWidgets.QPushButton,'exportbutton')
         instance.TRIRexportdata.clicked.connect(lambda:TRIR_widgets_defining.exportdatacomp(instance))
 
+        instance.TRIRexportdata_npy =instance.findChild(QtWidgets.QPushButton,'exportbutton_2')
+        instance.TRIRexportdata_npy.clicked.connect(lambda:TRIR_widgets_defining.exportdata_npyfile(instance))
 
 
         #defining shortcuts for fast work
@@ -310,7 +313,7 @@ class TRIR_widgets_defining():
         instance.TRIRreloadbutton.setEnabled(True)
         instance.TRIRgeneratebackground.setEnabled(True)
         instance.TRIRexportdata.setEnabled(True)
-
+        instance.TRIRexportdata_npy.setEnabled(True)
 
 
 
@@ -452,3 +455,9 @@ class TRIR_widgets_defining():
     def exportdatacomp(instance):
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName()
         pyTRIR_pack.TRIR.exportdata(file_name,jsondataset)
+
+    def exportdata_npyfile(instance):
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName()
+        pyTRIR_pack.TRIR.exportdata_to_npyfile(file_name,jsondataset)
+
+    

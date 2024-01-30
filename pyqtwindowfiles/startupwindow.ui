@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="pageStartup">
      <widget class="QFrame" name="frame_2">
@@ -1821,6 +1821,22 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <string>subtract scan 1</string>
        </property>
       </widget>
+      <widget class="QPushButton" name="exportbutton_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>170</x>
+         <y>620</y>
+         <width>151</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>export as npy-file</string>
+       </property>
+      </widget>
      </widget>
      <widget class="QFrame" name="TRIRcanvas">
       <property name="geometry">
@@ -2284,11 +2300,17 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <addaction name="menuhelp"/>
   </widget>
   <action name="actiondocumentation">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>documentation</string>
    </property>
   </action>
   <action name="actionunder_dev">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>under dev</string>
    </property>

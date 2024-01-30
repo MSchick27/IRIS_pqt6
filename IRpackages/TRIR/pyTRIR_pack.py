@@ -233,6 +233,22 @@ class TRIR:
         myFile.close()
 
 
+    def exportdata_to_npyfile(filepath,jsondataset):
+        databgsub = modify_arrays.subtract_bg(jsondataset)
+        stddeviation = jsondataset['std_deviation']
+        print(np.shape(databgsub))
+        np.save(str(str(filepath)+'_A_matrix'),databgsub)
+        np.save(str(str(filepath)+'_A_matrixerrors'),stddeviation)
+        np.save(str(str(filepath)+'_A_wavenumbers'),np.array(jsondataset['wn']))
+        np.save(str(str(filepath)+'_A_delays'),np.array(jsondataset['delays']))
+
+        #and combined in one:
+        np.savez(str(str(filepath)+'combined'),A=databgsub,Aerror=stddeviation,wn=np.array(jsondataset['wn']),delays=np.array(jsondataset['delays']))
+        print('successfully stored at'+str(filepath))
+
+
+
+
 
 
 
