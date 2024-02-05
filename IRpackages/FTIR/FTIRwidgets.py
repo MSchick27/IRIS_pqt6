@@ -423,23 +423,28 @@ class FTIR_widgets_():
     def importjson(instance):
                 instance.file_dialog = QtWidgets.QFileDialog()
                 instance.file_dialog.setFileMode(QtWidgets.QFileDialog.FileMode.ExistingFile)  # Set the mode to select an existing file
-                instance.file_dialog.setNameFilter("All files (*.json*)")  # Set filters for file json types
+                instance.file_dialog.setNameFilter("JSON files (*.json*)")  # Set filters for file json types
                 if instance.file_dialog.exec() == QtWidgets.QFileDialog.DialogCode.Accepted:
                     file_path = instance.file_dialog.selectedFiles()
+                    print(file_path)
                 
-                jsondata = open(str(file_path),'r')
+                jsondata = open(str(file_path[0]),'r')
                 instance.jsondict = json.load(jsondata)
                 for key in instance.jsondict:
                     instance.listWidget.addItem(key)
+                
+                instance.FTIRplotbutton.setEnabled(True)
+                instance.FTIRaxisbutton.setEnabled(True)
+                instance.lowframe.setEnabled(True)
 
                 instance.updatestatusbar(str('JSON-Project loaded from'+str(file_path)),0,True)
 
     def exportjson(instance):
                 file_name, _ = QtWidgets.QFileDialog.getSaveFileName(instance, "Save File", "", "JSON files (*.json)")
-                newjson = open(str(str(file_name) + '.json'),'w')
+                newjson = open(str(str(file_name)),'w')
                 json.dump(instance.jsondict, newjson)
                 newjson.close()
-                print('Project saved at: '+str(str(file_name) + '.json'))
+                print('Project saved at: '+str(str(file_name)))
                 instance.updatestatusbar(str('JSON-Project saved to '+str(file_name)),0,True)
 
 
