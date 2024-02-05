@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 import pandas as pd
+import json
 from time import strftime,sleep
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,NavigationToolbar2QT
@@ -32,7 +33,9 @@ class FTIR_widgets_():
             def __init__(self, parent=None):
                 super().__init__(parent)
                 self.setAcceptDrops(True)
-                self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+                #self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+
+                self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode(1))
                 self.setFrameShape(QtWidgets.QListWidget.Shape.NoFrame)
                 palette = QtGui.QPalette()
                 palette.setColor(palette.ColorGroup.Normal, palette.ColorRole.Highlight, QtGui.QColor("blueviolet"))
@@ -50,13 +53,17 @@ class FTIR_widgets_():
                 if event.mimeData().hasUrls():
                     urls = event.mimeData().urls()
                     filepaths = []
-                    for url in urls:
-                        file_path = url.toLocalFile()
-                        filepaths.append(file_path)
-                        filename = os.path.basename(file_path)
-                        self.addItem(filename)
 
-                    FTIR_widgets_.importdptfile(filepaths,instance)
+                    try:
+                        for url in urls:
+                            file_path = url.toLocalFile()
+                            filepaths.append(file_path)
+                            filename = os.path.basename(file_path)
+                            self.addItem(filename)
+
+                        FTIR_widgets_.importdptfile(filepaths,instance)
+                    except:
+                          print('Import ERROR -- pls check data format')
 
         """ 
             def eventFilter(instance,source,event):
@@ -106,9 +113,6 @@ class FTIR_widgets_():
         instance.listboxframe.setFrameStyle(QtWidgets.QFrame.Shape.NoFrame)
         instance.listWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         instance.listWidget.customContextMenuRequested.connect(openItemContextMenu)
-
-        
-        
         instance.listWidget.itemClicked.connect(lambda: FTIR_widgets_.selectitem_reload(instance))
         instance.previous_item = None
 
@@ -175,6 +179,11 @@ class FTIR_widgets_():
         instance.FTIRaxisbutton.clicked.connect(lambda:FTIR_widgets_.setAXIS(instance))
         instance.FTIRaxisbutton.setShortcut('Ctrl+a')
         instance.FTIRaxisbutton.setToolTip('Shortcut Ctr+a')
+
+        instance.importjsonbutton = instance.findChild(QtWidgets.QPushButton,'loadprojectbutton')
+        instance.importjsonbutton.clicked.connect(lambda:FTIR_widgets_.importjson(instance))
+        instance.exportjsonbutton = instance.findChild(QtWidgets.QPushButton,'saveprojectbutton')
+        instance.exportjsonbutton.clicked.connect(lambda:FTIR_widgets_.exportjson(instance))
         
 
 
@@ -237,7 +246,14 @@ class FTIR_widgets_():
         instance.polyfitbutton.clicked.connect(lambda: FTIR_widgets_.polyfit_bgcorrection(instance))
         instance.polyfitbutton.setToolTip('Start polyfit function for bg correction')
 
+        instance.fitoption = instance.findChild(QtWidgets.QComboBox,'fitcombobox')
+        instance.fitbutton = instance.findChild(QtWidgets.QPushButton,'fitbutton')
+        instance.fitbutton.clicked.connect(lambda: FTIR_widgets_.fitbands(instance))
+        instance.fitedit = instance.findChild(QtWidgets.QLineEdit,'fitedit')
 
+        instance.fftsmoothbutton = instance.findChild(QtWidgets.QPushButton,'fftsmoothbutton')
+        instance.fftsmoothbutton.clicked.connect(lambda: FTIR_widgets_.fouriersmooth(instance))
+        instance.smotthcutoffedit = instance.findChild(QtWidgets.QLineEdit,'smotthcutoffedit')
 
 
 
@@ -404,6 +420,27 @@ class FTIR_widgets_():
                 instance.updatestatusbar('New AXIS set for',0,True)
                 FTIR_widgets_.plotFTIR(instance)
 
+    def importjson(instance):
+                instance.file_dialog = QtWidgets.QFileDialog()
+                instance.file_dialog.setFileMode(QtWidgets.QFileDialog.FileMode.ExistingFile)  # Set the mode to select an existing file
+                instance.file_dialog.setNameFilter("All files (*.json*)")  # Set filters for file json types
+                if instance.file_dialog.exec() == QtWidgets.QFileDialog.DialogCode.Accepted:
+                    file_path = instance.file_dialog.selectedFiles()
+                
+                jsondata = open(str(file_path),'r')
+                instance.jsondict = json.load(jsondata)
+                for key in instance.jsondict:
+                    instance.listWidget.addItem(key)
+
+                instance.updatestatusbar(str('JSON-Project loaded from'+str(file_path)),0,True)
+
+    def exportjson(instance):
+                file_name, _ = QtWidgets.QFileDialog.getSaveFileName(instance, "Save File", "", "JSON files (*.json)")
+                newjson = open(str(str(file_name) + '.json'),'w')
+                json.dump(instance.jsondict, newjson)
+                newjson.close()
+                print('Project saved at: '+str(str(file_name) + '.json'))
+                instance.updatestatusbar(str('JSON-Project saved to '+str(file_name)),0,True)
 
 
 
@@ -618,6 +655,115 @@ class FTIR_widgets_():
 
                 instance.jsondict[name] = dataset
                 instance.listWidget.addItem(name)
+
+
+    def fouriersmooth(instance):
+                print('fourier smoothing function start')
+                key = instance.listWidget.currentItem().text()
+                x,y= FTIR_widgets_.getxy(instance,key)
+
+                smoothfak = int(instance.smotthcutoffedit.text())
+                y_smoothed = pyFTIR_pack.Fitting.fouriersmooth(y,smoothfak)
+                newkey =str(str(key)+'_FFT_sm'+str(smoothfak))
+                fourierset =  dataconstruct.j_son(x[:int(len(y_smoothed))],y_smoothed,False,'',0,True,'magenta',0.9,'solid',newkey,1)
+                FTIR_widgets_.dont_double_date(instance,name=newkey,dataset=fourierset)
+                instance.updatestatusbar(str('Fouriersmoothed with sm-Factor: '+str(smoothfak)+' dataset: '+str(key)),0,True)
+
+    def fitbands(instance):
+                key = instance.listWidget.currentItem().text()
+                fitfunc = str(instance.fitoption.currentText())
+                print(fitfunc)
+                x,y= FTIR_widgets_.getxy(instance,key)
+                
+                if 'lorentz' in fitfunc or 'gaussian' in fitfunc: 
+                    print('normal bandfitting func running...')
+                    fitx,fity,parstring,par,fittype,fiterror,fwhm = pyFTIR_pack.Fitting.fitband_allg(x,y,fitfunc,instance)
+
+                    print('####### Finished fit type: '+ str(fittype),'for'+str(key))
+                    print(parstring)
+                    print('estimated fit error: '+str(fiterror))
+                    
+            
+                    containername = str('FWHM: '+str(fwhm))
+                    fitdataset = dataconstruct.j_son(fitx,fity,False,'',1,True,'red',0.6,'dashed',containername,0)
+                    fitname = str(str(fittype)+'_fit_')
+                    FTIR_widgets_.dont_double_date(instance,name=fitname,dataset=fitdataset)
+
+                    if fwhm != 0:
+                        yfwhm = par[0]/2 + par[3]
+                        xfwhm1 = par[1] - fwhm/2
+                        xfwhm2 = par[1] + fwhm/2
+                        fwhmset =  dataconstruct.j_son([xfwhm1,xfwhm2],[yfwhm,yfwhm],False,'',1,True,'grey',0.6,'dotted',str('FWHM:'+str(round(fwhm,3))),1)   
+                        fitname = str('FWHM: '+str(fwhm))
+                        FTIR_widgets_.dont_double_date(instance,name=fitname,dataset=fwhmset)
+
+                    instance.updatestatusbar(str('finished Fittype: '+str(fittype)+'  Parameters: '+str(parstring)+'  estimated Error'+str(fiterror)),0,True)
+
+                if 'mult-lornz' in fitfunc:
+                    number_of_peaks = int(instance.fitedit.text())
+                    x,y,result,comps = pyFTIR_pack.Fitting.fitmulti(x,y,instance,number_of_peaks)
+                    resultset =  dataconstruct.j_son(x,result.best_fit,False,'',1,True,'red',0.6,'dashed',str('best fit'),0)  
+                    FTIR_widgets_.dont_double_date(instance,name='multifit',dataset=resultset)
+                    pastel_hex_colors = [
+                        "#FFC3A0",  # Pastel Coral
+                        "#FFD700",  # Pastel Gold
+                        "#A0E7E5",  # Pastel Turquoise
+                        "#FFBBFF",  # Pastel Pink
+                        "#C2F0C2",  # Pastel Green
+                        "#FFC8A2",  # Pastel Peach
+                        "#FFABAB",  # Pastel Red
+                        "#D0A7D0",  # Pastel Purple
+                        "#AEEEEE",  # Pastel Blue
+                        "#FFDFD3",  # Pastel Apricot
+                        "#B2F7EF",  # Pastel Aquamarine
+                        "#FFC3E2",  # Pastel Rose
+                        "#F0E68C",  # Pastel Khaki
+                        "#FFB6C1",  # Pastel Pink
+                        "#FFE4B5",  # Pastel PapayaWhip
+                        ]
+                    i=0
+                    for name, comp in comps.items():
+                        compset =  dataconstruct.j_son(x,comp,False,'',1,True,pastel_hex_colors[i],0.6,'solid',str('comp'),1)  
+                        FTIR_widgets_.dont_double_date(instance,name=name,dataset=compset)
+                        i=i+1
+
+                    
+                if 'smartfitter' in fitfunc:
+                    number_of_peaks = int(instance.fitedit.text())
+                    x,y,result,comps = pyFTIR_pack.Fitting.superfit_bands(x,y,instance,number_of_peaks)
+                    resultset =  dataconstruct.j_son(x,result.best_fit,False,'',1,True,'red',0.6,'dashed',str('best fit'),0)  
+                    FTIR_widgets_.dont_double_date(instance,name='multifit',dataset=resultset)
+                    pastel_hex_colors = [
+                        "#FFC3A0",  # Pastel Coral
+                        "#FFD700",  # Pastel Gold
+                        "#A0E7E5",  # Pastel Turquoise
+                        "#FFBBFF",  # Pastel Pink
+                        "#C2F0C2",  # Pastel Green
+                        "#FFC8A2",  # Pastel Peach
+                        "#FFABAB",  # Pastel Red
+                        "#D0A7D0",  # Pastel Purple
+                        "#AEEEEE",  # Pastel Blue
+                        "#FFDFD3",  # Pastel Apricot
+                        "#B2F7EF",  # Pastel Aquamarine
+                        "#FFC3E2",  # Pastel Rose
+                        "#F0E68C",  # Pastel Khaki
+                        "#FFB6C1",  # Pastel Pink
+                        "#FFE4B5",  # Pastel PapayaWhip
+                        ]
+                    i=0
+                    for name, comp in comps.items():
+                        compset =  dataconstruct.j_son(x,comp,False,'',1,True,pastel_hex_colors[i],0.6,'solid',str('comp'),1)  
+
+                        FTIR_widgets_.dont_double_date(instance,name=name,dataset=compset)
+                        i=i+1
+
+
+
+
+
+
+
+
 
 
 

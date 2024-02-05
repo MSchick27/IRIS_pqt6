@@ -271,6 +271,9 @@ class TRIR_widgets_defining():
         instance.file_dialog.setNameFilter("All files (*.*)")  # Set filters for file all types
         if instance.file_dialog.exec() == QtWidgets.QFileDialog.DialogCode.Accepted:
             file_path = instance.file_dialog.selectedFiles()
+        #else:
+            #break
+
         print('selected path=',file_path)
 
         if funcoptstring == 's2s_signal':

@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="pageStartup">
      <widget class="QFrame" name="frame_2">
@@ -515,17 +515,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item>
          <property name="text">
-          <string>blue</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>cornflowerblue</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
           <string>red</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>blue</string>
          </property>
         </item>
         <item>
@@ -535,17 +530,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item>
          <property name="text">
-          <string>violet</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
           <string>darkorange</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>darkgreen</string>
          </property>
         </item>
         <item>
@@ -555,7 +540,42 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item>
          <property name="text">
+          <string>cornflowerblue</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>darkseagreen</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>navy</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>violet</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>gold</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>peru</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>grey</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>darkgreen</string>
          </property>
         </item>
        </widget>
@@ -992,7 +1012,17 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item>
          <property name="text">
+          <string>mult-lornz</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>gauss</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>smartfitter</string>
          </property>
         </item>
        </widget>
