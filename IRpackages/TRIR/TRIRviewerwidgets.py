@@ -37,12 +37,12 @@ class TRIRviewer_widgets_defining():
             #the canvas
 
             instance.TRIRviewer_fig = plt.figure(2,figsize=(10, 10))
-            plt.rc('font', size=4) #controls default text size
-            plt.rcParams['xtick.major.pad']='1'
+            plt.rc('font', size=6) #controls default text size
+            plt.rcParams['xtick.major.pad']='2'
             plt.rcParams['ytick.major.pad']='1'
 
-            instance.grid = instance.TRIRviewer_fig.add_gridspec(6, 6, hspace=0.01, wspace=0.01,bottom=0.09,top=0.95,left=0.05,right=0.95)
-            instance.main_ax_viewer = instance.TRIRviewer_fig.add_subplot(instance.grid[1:, 1:])
+            instance.grid = instance.TRIRviewer_fig.add_gridspec(6, 6, hspace=0.01, wspace=0.01,bottom=0.1,top=0.95,left=0.1,right=0.99)
+            instance.main_ax_viewer = instance.TRIRviewer_fig.add_subplot(instance.grid[1:, 1:-1])
             instance.y_hist = instance.TRIRviewer_fig.add_subplot(instance.grid[1:, 0],sharey=instance.main_ax_viewer)
             instance.x_hist = instance.TRIRviewer_fig.add_subplot(instance.grid[0, 1:-1], sharex=instance.main_ax_viewer)
        
@@ -144,13 +144,26 @@ class TRIRviewer_widgets_defining():
         clipped_databgsub = np.clip(databgsub,a_min=minval,a_max = maxval)
         norm = colors.Normalize(vmin=minval, vmax=maxval)
         levelscontour = np.linspace(minval,maxval,levelnum)
+        print('levels_contour',levelscontour)
         #mainplot
         map=instance.main_ax_viewer.contourf(jsondataset['delays'],jsondataset['wn'],clipped_databgsub,levels=levelscontour,cmap=colormap)#,vmin=minval,vmax=maxval,alpha=1)
         print('Max '+str(maxval) + ' & min '+str(minval))
 
+
+
+
         #global cb
         #map=main_ax.contourf(clipped_databgsub,levels=levelnum,cmap=colormap)
-        instance.cb = instance.fig.colorbar(map, ax=instance.main_ax_viewer,norm=norm)
+        #instance.cb = instance.fig.colorbar(map, ax=instance.main_ax_viewer,norm=norm)
+        #instance.cb.set_label(r'∆OD', rotation=270) 
+        axins1 = inset_axes(instance.main_ax_viewer,width="30%",  # width: 50% of parent_bbox width
+                                    height="5%",  # height: 5%
+                                    loc="upper right",borderpad=1.5)
+        #global cbmain
+        instance.cb = instance.fig.colorbar(map, cax=axins1, orientation="horizontal", ticks=[minval,0,maxval],format='%.0e')
+        instance.cb.set_label(label='OD',weight='bold') 
+
+
 
         yhistdelay = float(instance.TRIRvieweryhistedit.text())
         yhistdelayindex = np.argmin(abs(jsondataset['delays']-yhistdelay))
@@ -170,7 +183,6 @@ class TRIRviewer_widgets_defining():
         else:
             xhisto = np.sum(np.abs(clipped_databgsub),axis=0)
 
-
         #plot setup axis
         instance.main_ax_viewer.set_xlabel('time [ps]')
         instance.main_ax_viewer.set_ylabel(r'wavenumber $cm^{-1}$')
@@ -179,7 +191,7 @@ class TRIRviewer_widgets_defining():
 
         instance.main_ax_viewer.grid(instance.TRIRviewergridcheck.isChecked())
 
-        instance.cb.set_label(r'∆OD', rotation=270)   
+        
 
         instance.y_hist.plot(yhisto,jsondataset['wn'],linewidth=.6)
         instance.y_hist.invert_xaxis()

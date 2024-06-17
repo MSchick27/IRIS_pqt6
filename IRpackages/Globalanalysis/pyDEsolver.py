@@ -4,6 +4,17 @@ from tqdm import tqdm
 from numba import jit,njit
 
 
+
+'''Own Procrastinating Project writing a library to solve differential equation with self modified:
+
+-ODE solvers on Runge Kutta basis (modfifications like adaptive stepsize and error calculation)
+-Shooting method with RK4 and newt raphson for boundary value problems
+-indirect Numerical solving methods for sparse matrices (or fuller ones (direct solutions))
+
++ additional rk4 jitted to improve speed
+ '''
+
+
 class ODEsolver():
     def RK1_euler_method(f,y0,t):
         print('Euler calculating')

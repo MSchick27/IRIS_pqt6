@@ -9,11 +9,14 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets,uic
+from PyQt6.QtMultimedia import QMediaPlayer
+from PyQt6.QtMultimediaWidgets import QVideoWidget
 
 
 #Part for my peronal written packages
 from IRpackages.TRIR import TRIRwidgets,TRIRviewerwidgets
 from IRpackages.FTIR import FTIRwidgets
+from IRpackages.TOOLbox import pyTool_cmos_focus, pyCAM
 
 
 class UI(QtWidgets.QMainWindow):
@@ -65,16 +68,22 @@ class UI(QtWidgets.QMainWindow):
         self.dropdown_TRIRimporter.triggered.connect(self.change_to_TRIR)
         self.dropdown_TRIRimporter.setShortcut('Ctrl+T')
 
-
         self.dropdown_TRIRviewer = self.findChild(QtGui.QAction,'actionTRIR_viewer')
         self.dropdown_TRIRviewer.setStatusTip("This is your button")
         self.dropdown_TRIRviewer.triggered.connect(self.change_to_TRIRviewer)
         self.dropdown_TRIRviewer.setShortcut('Ctrl+V')
 
+        self.dropdown_focus = self.findChild(QtGui.QAction,'actionfocus_calc')
+        self.dropdown_focus.setStatusTip("This is your button")
+        self.dropdown_focus.triggered.connect(self.change_to_focus_calcuator)
+
+        self.dropdown_cam = self.findChild(QtGui.QAction,'actionCam_GUI')
+        self.dropdown_cam.setStatusTip("Cameratool to capture focus")
+        self.dropdown_cam.triggered.connect(self.change_to_cam)
+
         self.show()
 
     
-
 
     def change_to_FTIR(self):
         self.timer.stop()
@@ -85,7 +94,7 @@ class UI(QtWidgets.QMainWindow):
         self.page_FTIR = self.findChild(QtWidgets.QWidget, 'pageFTIRviewer')
         self.stacker.setCurrentWidget(self.page_FTIR)
         FTIRwidgets.FTIR_widgets_.initer(self)
-       
+        
 
     def change_to_TRIR(self):
         self.timer.stop()
@@ -109,11 +118,32 @@ class UI(QtWidgets.QMainWindow):
         self.stacker.setCurrentWidget(self.page_trir_viewer)
         TRIRviewerwidgets.TRIRviewer_widgets_defining.initer(self)
 
-        
+
+    def change_to_focus_calcuator(self):
+        self.timer.stop()
+        self.updatestatusbar('TOOl to calculate beam waist via gaussian fits...',0,False)
+        self.stacker =  self.findChild(QtWidgets.QStackedWidget,'stacker')
+        self.page_trir_viewer = self.findChild(QtWidgets.QWidget, 'focuscalc')
+        self.stacker.setCurrentWidget(self.page_trir_viewer)
+        pyTool_cmos_focus.focus_calc.initer(self)
+
+
+    def change_to_cam(self):
+        self.timer.stop()
+        self.updatestatusbar('measure focus Tool...',0,False)
+        self.stacker =  self.findChild(QtWidgets.QStackedWidget,'stacker')
+        self.page_cam = self.findChild(QtWidgets.QWidget,'CamUI')
+        self.stacker.setCurrentWidget(self.page_cam)
+        pyCAM.CAM_GUI.initer(self)
+
+
+def INITIALIZE():
+    app = QtWidgets.QApplication(sys.argv)
+    UIWindow=UI()
+    UIWindow.show()
+    sys.exit(app.exec())
 
 
 
+INITIALIZE()
 
-app = QtWidgets.QApplication(sys.argv)
-UIWindow=UI()
-app.exec()

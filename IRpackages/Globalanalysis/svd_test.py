@@ -37,7 +37,7 @@ plt.show()
 # Determine the number of components to keep based on the singular values
 # You can use a threshold or visually inspect the singular values plot to decide
 # In this example, we keep the top 10 components
-num_components_to_keep = 1
+num_components_to_keep = 5
 
 
 
@@ -66,122 +66,45 @@ plt.show()
 
 
 #now lets get the vectors from svd
-""" plt.figure(figsize=(12, 6))
+plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
 for i in range(len(U[0,:num_components_to_keep])):
-    plt.plot(wavenumbers,U[:,i])
+    plt.plot(wavenumbers,U[:,i],label=str(i))
 plt.title('left vectors')
 plt.xlabel('spectral role')
 plt.ylabel('pixels')
+plt.legend()
 
 plt.subplot(1, 2, 2)
 for i in range(len(Vt[:num_components_to_keep,0])):
-    plt.plot(timepoints,Vt[i,:])
+    plt.plot(timepoints,Vt[i,:],label=str(i))
 plt.title('right vectors')
 plt.xlabel('spectral role')
 plt.ylabel('pixels')
 plt.xscale('log')
+plt.legend()
 
 plt.tight_layout()
-plt.show() """
-
-
-
-
-
-
-
-
-
-def model():
-
-    return 1
-
-
-def addpixel():
-    print('pixel added')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#to fit a spectra to the TRIR data. Let*s set a 
-
-""" import numpy as np
-import matplotlib.pyplot as plt
-import pyDEsolver as pyDE
-
-
-#a simple sequnetiell model to fit
-def three_state_reaction(t,k1, k2, A, B, C):
-    dA= -A*k1
-    dB= +dA - B*k2
-    dC= B*k2
-    
-
-
-def function(y,k1=1,k2=.1):
-    return np.transpose([-y[0]*k1 ,  y[0]*k1-y[1]*k2,  y[1]*k2])
-
-t= np.arange(0,20,0.1)
-y = pyDE.ODEsolver.RK4_method(f=function,y0=[100,0,0],t=t)
-
-plt.plot(t,y[0],label='A')
-plt.plot(t,y[1],label='B')
-plt.plot(t,y[2],label='C')
-plt.legend()
-plt.show() """
-
-
-
-""" 
-import numpy as np
-from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
-
-# Define the matrix representation of the kinetic model
-k_AB = 1  # Rate constant for A -> B
-k_BC = 0.1  # Rate constant for B -> C
-kinetic_matrix = np.array([[0, k_AB, 0], [0, 0, k_BC], [0, 0, 0]])
-
-# Define the initial concentrations of A, B, and C
-initial_conditions = np.transpose(np.array([1.0, 0.0, 0.0]))  # [A0, B0, C0]
-
-# Define the time points for integration
-t_span = (0, 10)  # Integration time span
-
-# Define a function that describes the kinetic model
-def kinetic_model(t, concentrations):
-    dCdt = np.dot(kinetic_matrix, concentrations)
-    return dCdt
-
-# Integrate the kinetic model using scipy's solve_ivp
-solution = solve_ivp(kinetic_model, t_span, initial_conditions, t_eval=np.linspace(0, 10, 100))
-
-# Plot the concentrations of A, B, and C over time
-plt.figure(figsize=(8, 6))
-plt.plot(solution.t, solution.y[0], label='A')
-plt.plot(solution.t, solution.y[1], label='B')
-plt.plot(solution.t, solution.y[2], label='C')
-plt.xlabel('Time')
-plt.ylabel('Concentration')
-plt.legend() """
 plt.show()
+
+print(Vt[0,:])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

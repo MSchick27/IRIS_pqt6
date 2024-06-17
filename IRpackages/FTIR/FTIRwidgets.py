@@ -614,7 +614,7 @@ class FTIR_widgets_():
                     xpoly = [float(item) for item in xpoly]
                     xpoly.sort()
                     xpolyrounded = [str(f'{item: .5g}') for item in xpoly]
-                    instance.polyfitsliceedit.setText(str(''.join(xpolyrounded)))
+                    instance.polyfitsliceedit.setText(str(','.join(xpolyrounded)))
                     print(xpoly)
 
 

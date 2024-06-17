@@ -91,6 +91,9 @@ class TRIR:
         try:
             scdir =str(str(datadir)+'/scans')
             delay_files = os.listdir(scdir)
+            for i,item in enumerate(delay_files):
+                if 'DS_Store' in item:
+                    delay_files.pop(i)
             delay_files = sorted(delay_files)
             delay_files = np.array(delay_files)
             global delayfilearray
@@ -101,10 +104,10 @@ class TRIR:
         
         global scannumber
         if scanslice== ':':
-            scannumber =len(os.listdir(str(str(scdir)+'/'+str(delayfilearray[0]))))//5 -1
+            scannumber =len(os.listdir(str(str(scdir)+'/'+str(delayfilearray[0]))))//5 #-1
             print('Number of scans taken into account:',scannumber)
         else:
-            scannumberall = len(os.listdir(str(str(scdir)+'/'+str(delayfilearray[0]))))//5 -1
+            scannumberall = len(os.listdir(str(str(scdir)+'/'+str(delayfilearray[0]))))//5 #-1
             fillinarray = np.zeros(scannumberall)
             fillarray = cut1darray(scanslice,fillinarray)
             scannumber = len(fillarray)
@@ -219,33 +222,55 @@ class TRIR:
 
 
 
-    def exportdata(filepath,jsondataset):
-        databgsub = modify_arrays.subtract_bg(jsondataset)
-        stddeviation = jsondataset['std_deviation']
-        print(np.shape(databgsub))
-        myFile = open(filepath,'w')
-        for i,delay in enumerate(jsondataset['delays']):
-            for j,wn in enumerate(jsondataset['wn']):
-                arrayvalue = databgsub[j,i]
-                stddev_value = stddeviation[j,i]
-                myFile.write(str(delay)+'\t'+str(wn)+'\t'+str(arrayvalue)+'\t'+str(stddev_value)+'\n')
+    def exportdata(filepath,jsondataset,plotname):
+        if plotname == 'data':
+            databgsub = modify_arrays.subtract_bg(jsondataset)
+            stddeviation = jsondataset['std_deviation']
+            print(np.shape(databgsub))
+            myFile = open(filepath,'w')
+            for i,delay in enumerate(jsondataset['delays']):
+                for j,wn in enumerate(jsondataset['wn']):
+                    arrayvalue = databgsub[j,i]
+                    stddev_value = stddeviation[j,i]
+                    myFile.write(str(delay)+'\t'+str(wn)+'\t'+str(arrayvalue)+'\t'+str(stddev_value)+'\n')
 
-        myFile.close()
+            myFile.close()
+
+        if plotname == 'background':
+            databg = jsondataset['bgdata']
+            print(np.shape(databg))
+            myFile = open(filepath,'w')
+            for i,delay in enumerate(jsondataset['delays']):
+                for j,wn in enumerate(jsondataset['wn']):
+                    arrayvalue = databg[j,i]
+                    myFile.write(str(delay)+'\t'+str(wn)+'\t'+str(arrayvalue)+'\n')
 
 
-    def exportdata_to_npyfile(filepath,jsondataset):
-        databgsub = modify_arrays.subtract_bg(jsondataset)
-        stddeviation = jsondataset['std_deviation']
-        print(np.shape(databgsub))
-        np.save(str(str(filepath)+'_A_matrix'),databgsub)
-        np.save(str(str(filepath)+'_A_matrixerrors'),stddeviation)
-        np.save(str(str(filepath)+'_A_wavenumbers'),np.array(jsondataset['wn']))
-        np.save(str(str(filepath)+'_A_delays'),np.array(jsondataset['delays']))
+    def exportdata_to_npyfile(filepath,jsondataset,plotname):
+        if plotname == 'data':
+            databgsub = modify_arrays.subtract_bg(jsondataset)
+            stddeviation = jsondataset['std_deviation']
+            print(np.shape(databgsub))
+            np.save(str(str(filepath)+'_A_matrix'),databgsub)
+            np.save(str(str(filepath)+'_A_matrixerrors'),stddeviation)
+            np.save(str(str(filepath)+'_A_wavenumbers'),np.array(jsondataset['wn']))
+            np.save(str(str(filepath)+'_A_delays'),np.array(jsondataset['delays']))
+            np.savez(str(str(filepath)+'combined'),A=databgsub,Aerror=stddeviation,wn=np.array(jsondataset['wn']),delays=np.array(jsondataset['delays']))
+            print('successfully stored at'+str(filepath))
 
-        #and combined in one:
-        np.savez(str(str(filepath)+'combined'),A=databgsub,Aerror=stddeviation,wn=np.array(jsondataset['wn']),delays=np.array(jsondataset['delays']))
-        print('successfully stored at'+str(filepath))
+        if plotname == 'raw':
+            print('no raw function for now')
 
+        if plotname == 'background':
+            databg = jsondataset['bgdata']
+            print(np.shape(databg))
+            np.save(str(str(filepath)+'_A_matrix'),databg)
+            np.save(str(str(filepath)+'_A_wavenumbers'),np.array(jsondataset['wn']))
+            np.save(str(str(filepath)+'_A_delays'),np.array(jsondataset['delays']))
+            np.savez(str(str(filepath)+'combined'),A=databg,wn=np.array(jsondataset['wn']),delays=np.array(jsondataset['delays']))
+            print('successfully stored at'+str(filepath))
+        
+        
 
 
 
@@ -363,3 +388,4 @@ class colormapsfor_TRIR():
         )
     
         return colormap#, norm
+    

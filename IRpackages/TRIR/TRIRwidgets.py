@@ -89,6 +89,7 @@ class TRIR_widgets_defining():
         instance.TRIRgeneratebackground =instance.findChild(QtWidgets.QPushButton,'genbackground')
         instance.TRIRgeneratebackground.clicked.connect(lambda:TRIR_widgets_defining.generate_background_fit(instance))
 
+        instance.exportcombo =instance.findChild(QtWidgets.QComboBox,'exportcombo')
         instance.TRIRexportdata =instance.findChild(QtWidgets.QPushButton,'exportbutton')
         instance.TRIRexportdata.clicked.connect(lambda:TRIR_widgets_defining.exportdatacomp(instance))
 
@@ -393,7 +394,7 @@ class TRIR_widgets_defining():
         instance.TRIRfitdelay = instance.findChild(QtWidgets.QLineEdit,'fitdelaysedit')
         fitdelayslice = str(instance.TRIRfitdelay.text())
         print('BACKGROUND CORRECTION','Polynomial-order=',polyorder,'Pixelslice=',pixelslice,'Fitting to delays=',fitdelayslice)
-        bgarraydata,xdata,ydata,polyfitx,polyfity = pyTRIR_bgcorr.TRIRbgcorr(jsondataset,polyorder,fitdelayslice,pixelslice)
+        bgarraydata,xdata,ydata,polyfitx,polyfity,bgparameterarray = pyTRIR_bgcorr.TRIRbgcorr(jsondataset,polyorder,fitdelayslice,pixelslice)
         jsondataset['bgdata'] = bgarraydata
 
 
@@ -409,13 +410,13 @@ class TRIR_widgets_defining():
                 self.BGCORRhorizontalLayout.setObjectName('canvas scroll layout')
                 #the canvas
                 self.BGCORRfig = plt.figure(figsize=(10,15))
-                plt.rc('font', size=3) #controls default text size
+                plt.rc('font', size=4) #controls default text size
                 plt.rcParams['xtick.major.pad']='1'
                 plt.rcParams['ytick.major.pad']='1'
 
 
                 delaynumber = 8
-                grid = self.BGCORRfig.add_gridspec(int(delaynumber/2+2), 2, hspace=0.01, wspace=0.01,bottom=0.09,top=0.95,left=0.05,right=0.95)
+                grid = self.BGCORRfig.add_gridspec(int(delaynumber/2+3), 2, hspace=0, wspace=0,bottom=0.09,top=0.95,left=0.1,right=0.9)
                 for i in range(int(delaynumber/2)):
                     delayplot = self.BGCORRfig.add_subplot(grid[i, 0])
                     delaydist = len(jsondataset['delays'])//delaynumber
@@ -427,21 +428,36 @@ class TRIR_widgets_defining():
                     delayplot.scatter(pyTRIR_bgcorr.cut1d(pixelslice,xdata),pyTRIR_bgcorr.cut1d(pixelslice,bgarraydata[:,indexx]),marker='.',s=1,color='r')
                     #delayplot.yaxis.set_ticklabels([])
 
-                    delayplot2 = self.BGCORRfig.add_subplot(grid[i, 1])
+                    delayplot2 = self.BGCORRfig.add_subplot(grid[i, 1],sharey=delayplot)
                     indexx2 = int(delaydist * i + delaynumber/2*delaydist)
                     print(indexx2)
                     delayplot2.plot(xdata,jsondataset['data'][:,indexx2],label= str(round(jsondataset['delays'][indexx2],2)),linewidth=.6)
                     delayplot2.legend()
                     delayplot2.plot(xdata,bgarraydata[:,indexx2],color= 'y',linewidth=.6)
                     delayplot2.scatter(pyTRIR_bgcorr.cut1d(pixelslice,xdata),pyTRIR_bgcorr.cut1d(pixelslice,bgarraydata[:,indexx2]),s=1,marker='.',color='r')
-                    delayplot2.yaxis.set_ticklabels([])
-
+                    #delayplot2.yaxis.set_ticklabels([])
 
                 latestdelay = self.BGCORRfig.add_subplot(grid[int(delaynumber/2+1)-1:int(delaynumber/2+2), :])
-                latestdelay.plot(xdata,jsondataset['data'][:,-1],label= str(round(jsondataset['delays'][-1],2)))
+                latestdelay.plot(xdata,jsondataset['data'][:,-1],linewidth=.7,label= str(round(jsondataset['delays'][-1],2)))
+                latestdelay.scatter(pyTRIR_bgcorr.cut1d(pixelslice,xdata),pyTRIR_bgcorr.cut1d(pixelslice,bgarraydata[:,-1]),s=1)
                 latestdelay.legend()
-                latestdelay.plot(polyfitx,polyfity)
+                latestdelay.plot(polyfitx,polyfity,linewidth=.7)
                 latestdelay.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+                par1 = self.BGCORRfig.add_subplot(grid[int(delaynumber/2+2),0])
+                par2 = self.BGCORRfig.add_subplot(grid[int(delaynumber/2+2),1])
+                par1.plot(jsondataset['delays'],bgparameterarray[0],label='offset',linewidth=.7)
+                par1.errorbar(jsondataset['delays'],bgparameterarray[0],yerr=bgparameterarray[1],capsize=0.5,linewidth=.7,fmt=' ')
+                par2.plot(jsondataset['delays'],bgparameterarray[2],label='y factor',linewidth=.7)
+                par2.errorbar(jsondataset['delays'],bgparameterarray[2],yerr=bgparameterarray[3],capsize=0.5,linewidth=.7,fmt=' ')
+                par1.set_xscale('log')
+                par2.set_xscale('log')
+                par1.ticklabel_format(axis='y',style='sci')
+                par2.ticklabel_format(axis='y',style='sci')
+                par1.legend()
+                par2.legend()
+                print('yfactor:',list(bgparameterarray[2]))
+                print('yfactor_error:',list(bgparameterarray[3]))
 
                 self.BGCORRcanvas = FigureCanvasQTAgg(self.BGCORRfig) 
                 #add canvas to widget
@@ -456,11 +472,13 @@ class TRIR_widgets_defining():
 
 
     def exportdatacomp(instance):
+        plotname = str(instance.exportcombo.currentText())
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName()
-        pyTRIR_pack.TRIR.exportdata(file_name,jsondataset)
+        pyTRIR_pack.TRIR.exportdata(file_name,jsondataset,plotname)
 
     def exportdata_npyfile(instance):
+        plotname = str(instance.exportcombo.currentText())
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName()
-        pyTRIR_pack.TRIR.exportdata_to_npyfile(file_name,jsondataset)
+        pyTRIR_pack.TRIR.exportdata_to_npyfile(file_name,jsondataset,plotname)
 
     
